@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ICT Inventory Monitoring</title>
+  <style>
+    body{
+      font-family:Arial;
+      background:#f4f6f9;
+      padding:30px;
+    }
+    h1{
+      text-align:center;
+      margin-bottom:30px;
+    }
+    .dashboard{
+      display:flex;
+      gap:20px;
+      justify-content:center;
+      margin-bottom:30px;
+    }
+    .card{
+      background:white;
+      padding:20px;
+      border-radius:10px;
+      box-shadow:0 3px 10px rgba(0,0,0,0.1);
+      width:200px;
+      text-align:center;
+    }
+    .card h2{
+      margin:10px 0;
+      font-size:30px;
+      color:#e53935;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      background:white;
+      box-shadow:0 3px 10px rgba(0,0,0,0.1);
+    }
+    th, td{
+      padding:12px;
+      border-bottom:1px solid #ddd;
+      text-align:left;
+    }
+    th{
+      background:#e53935;
+      color:white;
+    }
+  </style>
+</head>
+<body>
+
+<h1>ICT Inventory Monitoring</h1>
+
+<div class="dashboard">
+  <div class="card">
+    <p>Total Schools</p>
+    <h2 id="total">0</h2>
+  </div>
+  <div class="card">
+    <p>Uploaded</p>
+    <h2 id="uploaded">0</h2>
+  </div>
+  <div class="card">
+    <p>Validated</p>
+    <h2 id="validated">0</h2>
+  </div>
+</div>
+
+<table id="table">
+  <thead>
+    <tr>
+      <th>School</th>
+      <th>Uploaded</th>
+      <th>Validated</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<!-- PapaParse Library -->
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script>
+// Your published Google Sheets CSV link
+const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQZa3QJGFxModphZpDEp82APS2U7sujwzIlTWEd0rxQYiADCDdV2owSffibJZUMK_UUeY1Sw0sFkLDJ/pub?output=csv";
+
+// Parse CSV with PapaParse
+Papa.parse(sheetURL, {
+  download: true,
+  header: true,
+  complete: function(results) {
+    const data = results.data;
+    let schools = [];
+    let uploadedCount = 0;
+    let validatedCount = 0;
+
+    data.forEach(row => {
+      if(!row.School) return; // skip empty rows
+      schools.push(row);
+      if(row.Uploaded?.trim().toLowerCase() === "yes") uploadedCount++;
+      if(row.Validated?.trim().toLowerCase() === "yes") validatedCount++;
+    });
+
+    // Sort schools alphabetically
+    schools.sort((a,b) => a.School.localeCompare(b.School));
+
+    // Build table
+    let tableHTML = "";
+    schools.forEach(s => {
+      tableHTML += `
+        <tr>
+          <td>${s.School}</td>
+          <td>${s.Uploaded}</td>
+          <td>${s.Validated}</td>
+        </tr>`;
+    });
+
+    document.querySelector("#table tbody").innerHTML = tableHTML;
+    document.getElementById("total").innerText = schools.length;
+    document.getElementById("uploaded").innerText = uploadedCount;
+    document.getElementById("validated").innerText = validatedCount;
+  },
+  error: function(err) {
+    console.error("Error fetching CSV:", err);
+  }
+});
+</script>
+
+</body>
+</html>
